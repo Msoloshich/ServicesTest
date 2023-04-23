@@ -28,7 +28,7 @@ class MyService : Service() {
             }
         }
         log("Service onStartCommand")
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
     override fun onDestroy() {
