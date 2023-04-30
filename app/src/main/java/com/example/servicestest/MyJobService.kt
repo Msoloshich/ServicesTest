@@ -1,11 +1,9 @@
 package com.example.servicestest
 
-import android.app.Service
 import android.app.job.JobParameters
 import android.app.job.JobService
-import android.content.Context
 import android.content.Intent
-import android.os.IBinder
+import android.os.Build
 import android.util.Log
 import kotlinx.coroutines.*
 
@@ -15,11 +13,20 @@ class MyJobService : JobService() {
     override fun onStartJob(params: JobParameters?): Boolean {
         log("JobService onStartJob")
         coroutineScope.launch {
-            for (i in 0 until 100) {
-                delay(1000)
-                log("TIMER $i")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                var workLaunch = params?.dequeueWork()
+
+                while (workLaunch != null) {
+                    val page = workLaunch.intent.getIntExtra(PAGE, 0)
+                    for (i in 0 until 5) {
+                        delay(1000)
+                        log("TIMER $i $page")
+                    }
+                    params?.completeWork(workLaunch)
+                    workLaunch = params?.dequeueWork()
+                }
             }
-            jobFinished(params, true)
+            jobFinished(params, false)
         }
         return true
     }
@@ -46,6 +53,13 @@ class MyJobService : JobService() {
 
     companion object {
         const val JOB_ID = 1
+        const val PAGE = "page"
+
+        fun newIntent(page: Int): Intent {
+            return Intent().apply {
+                putExtra(PAGE, page)
+            }
+        }
     }
 
 }
